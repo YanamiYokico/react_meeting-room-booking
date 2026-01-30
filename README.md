@@ -2,10 +2,10 @@
 This repository contains a web application for booking meeting rooms.
 The application allows users to manage meeting rooms, create bookings, and collaborate with other users using role-based access control.
 # Features
--User registration and authentication using Firebase Authentication (email/password)
--Persistent authentication state via Firebase-managed tokens
--Meeting rooms management
--Create, edit, and delete rooms
+- User registration and authentication using Firebase Authentication (email/password)
+- Persistent authentication state via Firebase-managed tokens
+- Meeting rooms management
+- Create, edit, and delete rooms
 - Bookings
 - Create bookings for a specific room and time range
 - Edit and cancel bookings
