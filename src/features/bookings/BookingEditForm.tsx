@@ -3,6 +3,23 @@ import type { Booking } from './booking.types'
 import { updateBooking } from './bookings.service'
 import { Timestamp } from 'firebase/firestore'
 
+function toDatetimeLocal(date: Date) {
+  const pad = (n: number) => String(n).padStart(2, '0')
+
+  return (
+    date.getFullYear() +
+    '-' +
+    pad(date.getMonth() + 1) +
+    '-' +
+    pad(date.getDate()) +
+    'T' +
+    pad(date.getHours()) +
+    ':' +
+    pad(date.getMinutes())
+  )
+}
+
+
 type Props = {
   booking: Booking
   onUpdated: (booking: Booking) => void
@@ -12,11 +29,13 @@ export function BookingEditForm({ booking, onUpdated }: Props) {
   const [editing, setEditing] = useState(false)
 
   const [start, setStart] = useState(
-    booking.startAt.toDate().toISOString().slice(0, 16)
+    toDatetimeLocal(booking.startAt.toDate())
   )
+  
   const [end, setEnd] = useState(
-    booking.endAt.toDate().toISOString().slice(0, 16)
+    toDatetimeLocal(booking.endAt.toDate())
   )
+
   const [description, setDescription] = useState(booking.description)
   const [error, setError] = useState<string | null>(null)
 
