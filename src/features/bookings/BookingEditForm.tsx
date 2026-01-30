@@ -2,23 +2,7 @@ import { useState } from 'react'
 import type { Booking } from './booking.types'
 import { updateBooking } from './bookings.service'
 import { Timestamp } from 'firebase/firestore'
-
-function toDatetimeLocal(date: Date) {
-  const pad = (n: number) => String(n).padStart(2, '0')
-
-  return (
-    date.getFullYear() +
-    '-' +
-    pad(date.getMonth() + 1) +
-    '-' +
-    pad(date.getDate()) +
-    'T' +
-    pad(date.getHours()) +
-    ':' +
-    pad(date.getMinutes())
-  )
-}
-
+import { toDatetimeLocal } from '../../shared/utils/date'
 
 type Props = {
   booking: Booking
@@ -31,7 +15,7 @@ export function BookingEditForm({ booking, onUpdated }: Props) {
   const [start, setStart] = useState(
     toDatetimeLocal(booking.startAt.toDate())
   )
-  
+
   const [end, setEnd] = useState(
     toDatetimeLocal(booking.endAt.toDate())
   )
