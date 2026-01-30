@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import type { Booking } from './booking.types'
-import { getRoomBookings, deleteBooking } from './bookings.service'
+import { deleteBooking } from './bookings.service'
 import { BookingEditForm } from './BookingEditForm'
 import { BookingForm } from './BookingForm'
 import { useAuthStore } from '../auth/auth.store'
+import { collection, onSnapshot, query, where } from 'firebase/firestore'
+import { db } from '../../firebase/firebase'
 
 type Props = {
   roomId: string
@@ -15,8 +17,23 @@ export function BookingList({ roomId, roomRole }: Props) {
   const [bookings, setBookings] = useState<Booking[]>([])
 
   useEffect(() => {
-    getRoomBookings(roomId).then(setBookings)
+    const q = query(
+      collection(db, 'bookings'),
+      where('roomId', '==', roomId)
+    )
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const bookings = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Omit<Booking, 'id'>),
+      }))
+
+      setBookings(bookings)
+    })
+
+    return () => unsubscribe()
   }, [roomId])
+
 
   return (
     <div className="space-y-3">

@@ -80,7 +80,8 @@ export async function deleteRoom(roomId: string) {
 }
 
 export async function addMemberToRoom(
-  roomId: string,
+  room: Room,
+  currentUserId: string,
   email: string,
   role: 'admin' | 'user'
 ) {
@@ -95,11 +96,19 @@ export async function addMemberToRoom(
     throw new Error('User with this email not found')
   }
 
-  const user = snap.docs[0].data() as { uid: string }
+  const userIdToAdd = snap.docs[0].id
 
-  const roomRef = doc(db, 'rooms', roomId)
+  if (userIdToAdd === currentUserId) {
+    throw new Error('You cannot add yourself to the room')
+  }
+
+  if (room.members[userIdToAdd]) {
+    throw new Error('User is already a member of this room')
+  }
+
+  const roomRef = doc(db, 'rooms', room.id)
 
   await updateDoc(roomRef, {
-    [`members.${user.uid}`]: role,
+    [`members.${userIdToAdd}`]: role,
   })
 }

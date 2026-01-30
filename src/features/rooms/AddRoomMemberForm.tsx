@@ -1,16 +1,22 @@
 import { useState } from 'react'
 import { addMemberToRoom } from './rooms.service'
+import type { Room } from './rooms.types'
+import { useAuthStore } from '../auth/auth.store'
 
 type Props = {
-  roomId: string
+  room: Room
 }
 
-export function AddRoomMemberForm({ roomId }: Props) {
+export function AddRoomMemberForm({ room }: Props) {
+  const currentUser = useAuthStore((s) => s.user)
+
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<'admin' | 'user'>('user')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+
+  if (!currentUser) return null
 
   return (
     <div className="border p-3 rounded space-y-2 bg-gray-50">
@@ -59,7 +65,12 @@ export function AddRoomMemberForm({ roomId }: Props) {
             setError(null)
             setSuccess(false)
 
-            await addMemberToRoom(roomId, email, role)
+            await addMemberToRoom(
+              room,
+              currentUser.uid,
+              email.trim(),
+              role
+            )
 
             setEmail('')
             setSuccess(true)

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
-import { getUserRooms, deleteRoom } from './rooms.service'
+import { deleteRoom } from './rooms.service'
 import { useAuthStore } from '../auth/auth.store'
 import { BookingList } from '../bookings/BookingList'
 import { RoomEditForm } from './RoomEditForm'
 import { RoomForm } from './RoomForm'
 import { AddRoomMemberForm } from './AddRoomMemberForm'
 import type { Room } from './rooms.types'
+import { collection, onSnapshot, query, where } from 'firebase/firestore'
+import { db } from '../../firebase/firebase'
 
 export function RoomList() {
   const user = useAuthStore((s) => s.user)
@@ -15,10 +17,24 @@ export function RoomList() {
   useEffect(() => {
     if (!user) return
 
-    getUserRooms(user.uid)
-      .then(setRooms)
-      .finally(() => setLoading(false))
+    const q = query(
+      collection(db, 'rooms'),
+      where(`members.${user.uid}`, 'in', ['admin', 'user'])
+    )
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const rooms = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Omit<Room, 'id'>),
+      }))
+
+      setRooms(rooms)
+      setLoading(false)
+    })
+
+    return () => unsubscribe()
   }, [user])
+
 
   if (!user) return null
   if (loading) return <div>Loading rooms...</div>
@@ -90,7 +106,7 @@ export function RoomList() {
             </div>
 
             {role === 'admin' && (
-              <AddRoomMemberForm roomId={room.id} />
+              <AddRoomMemberForm room={room} />
             )}
 
             <BookingList
