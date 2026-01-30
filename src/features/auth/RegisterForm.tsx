@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuthStore } from './auth.store'
+import { getAuthErrorMessage } from './auth.errors'
 
 export function RegisterForm() {
   const register = useAuthStore((s) => s.register)
@@ -7,6 +8,8 @@ export function RegisterForm() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
   return (
     <div className="max-w-sm mx-auto mt-20 space-y-4">
@@ -16,14 +19,20 @@ export function RegisterForm() {
         className="w-full border p-2"
         placeholder="Name"
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(e) => {
+          setName(e.target.value)
+          setError(null)
+        }}
       />
 
       <input
         className="w-full border p-2"
         placeholder="Email"
         value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        onChange={(e) => {
+          setEmail(e.target.value)
+          setError(null)
+        }}
       />
 
       <input
@@ -31,12 +40,30 @@ export function RegisterForm() {
         type="password"
         placeholder="Password"
         value={password}
-        onChange={(e) => setPassword(e.target.value)}
+        onChange={(e) => {
+          setPassword(e.target.value)
+          setError(null)
+        }}
       />
 
+      {error && (
+        <div className="text-sm text-red-600">{error}</div>
+      )}
+
       <button
-        className="w-full bg-green-600 text-white p-2"
-        onClick={() => register(name, email, password)}
+        disabled={loading}
+        className="w-full bg-green-600 text-white p-2 disabled:opacity-50"
+        onClick={async () => {
+          try {
+            setLoading(true)
+            setError(null)
+            await register(name, email, password)
+          } catch (e) {
+            setError(getAuthErrorMessage(e))
+          } finally {
+            setLoading(false)
+          }
+        }}
       >
         Register
       </button>
