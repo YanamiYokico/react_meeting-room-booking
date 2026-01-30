@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { addMemberToRoom } from './rooms.service'
 import type { Room } from './rooms.types'
 import { useAuthStore } from '../auth/auth.store'
@@ -15,6 +15,16 @@ export function AddRoomMemberForm({ room }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+
+  useEffect(() => {
+    if (!success) return
+
+    const timer = setTimeout(() => {
+      setSuccess(false)
+    }, 2500)
+
+    return () => clearTimeout(timer)
+  }, [success])
 
   if (!currentUser) return null
 
