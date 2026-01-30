@@ -47,7 +47,7 @@ export async function createBooking(
     throw new Error('Time slot is already booked')
   }
 
-  await addDoc(bookingsRef, {
+  const docRef = await addDoc(bookingsRef, {
     roomId,
     startAt: startTs,
     endAt: endTs,
@@ -55,6 +55,15 @@ export async function createBooking(
     createdBy: userId,
     createdAt: serverTimestamp(),
   })
+
+  return {
+    id: docRef.id,
+    roomId,
+    startAt: startTs,
+    endAt: endTs,
+    description,
+    createdBy: userId,
+  }
 }
 
 export async function getRoomBookings(roomId: string): Promise<Booking[]> {

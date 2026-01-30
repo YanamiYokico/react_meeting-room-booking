@@ -1,19 +1,20 @@
-import { useState } from 'react'
-import { createBooking } from './bookings.service'
-import { useAuthStore } from '../auth/auth.store'
+import { useState } from "react"
+import { createBooking } from "./bookings.service"
+import { useAuthStore } from "../auth/auth.store"
+import type { Booking } from "./booking.types"
 
 type Props = {
   roomId: string
+  onCreated: (booking: Booking) => void
 }
 
-export function BookingForm({ roomId }: Props) {
+export function BookingForm({ roomId, onCreated }: Props) {
   const user = useAuthStore((s) => s.user)
-
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
   const [description, setDescription] = useState('')
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
 
   if (!user) return null
 
@@ -45,16 +46,14 @@ export function BookingForm({ roomId }: Props) {
       {error && <div className="text-red-600 text-sm">{error}</div>}
 
       <button
-        disabled={submitting}
+        disabled={loading}
         className="bg-green-600 text-white px-3 py-1 disabled:opacity-50"
         onClick={async () => {
-          if (submitting) return
-
           try {
-            setSubmitting(true)
+            setLoading(true)
             setError(null)
 
-            await createBooking(
+            const booking = await createBooking(
               roomId,
               new Date(start),
               new Date(end),
@@ -62,17 +61,21 @@ export function BookingForm({ roomId }: Props) {
               user.uid
             )
 
+            onCreated(booking)
+
             setStart('')
             setEnd('')
             setDescription('')
-          } catch (e: unknown) {
-            setError(e instanceof Error ? e.message : String(e))
+          } catch (e) {
+            setError(
+              e instanceof Error ? e.message : String(e)
+            )
           } finally {
-            setSubmitting(false)
+            setLoading(false)
           }
         }}
       >
-        {submitting ? 'Booking...' : 'Book'}
+        Book
       </button>
     </div>
   )

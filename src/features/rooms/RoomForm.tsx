@@ -1,8 +1,13 @@
-import { useState } from 'react'
-import { createRoom } from './rooms.service'
-import { useAuthStore } from '../auth/auth.store'
+import { useState } from "react"
+import { useAuthStore } from "../auth/auth.store"
+import { createRoom } from "./rooms.service"
+import type { Room } from "./rooms.types"
 
-export function RoomForm() {
+type Props = {
+  onCreated: (room: Room) => void
+}
+
+export function RoomForm({ onCreated }: Props) {
   const user = useAuthStore((s) => s.user)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -29,8 +34,17 @@ export function RoomForm() {
 
       <button
         className="bg-blue-600 text-white px-4 py-2"
-        onClick={() => {
-          createRoom(user.uid, name, description)
+        onClick={async () => {
+          if (!name.trim()) return
+
+          const room = await createRoom(
+            user.uid,
+            name,
+            description
+          )
+
+          onCreated(room)
+
           setName('')
           setDescription('')
         }}

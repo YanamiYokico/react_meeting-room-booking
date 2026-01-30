@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { getUserRooms, deleteRoom, type Room } from './rooms.service'
+import { getUserRooms, deleteRoom } from './rooms.service'
 import { useAuthStore } from '../auth/auth.store'
-import { BookingForm } from '../bookings/BookingForm'
 import { BookingList } from '../bookings/BookingList'
 import { RoomEditForm } from './RoomEditForm'
+import { RoomForm } from './RoomForm'
+import type { Room } from './rooms.types'
 
 export function RoomList() {
   const user = useAuthStore((s) => s.user)
@@ -21,13 +22,19 @@ export function RoomList() {
   if (!user) return null
   if (loading) return <div>Loading rooms...</div>
 
-  if (rooms.length === 0) {
-    return <div className="text-gray-500">No rooms yet</div>
-  }
-
   return (
     <div className="space-y-4">
       <h3 className="font-semibold text-lg">Your rooms</h3>
+
+      <RoomForm
+        onCreated={(room) => {
+          setRooms((prev) => [room, ...prev])
+        }}
+      />
+
+      {rooms.length === 0 && (
+        <div className="text-gray-500">No rooms yet</div>
+      )}
 
       {rooms.map((room) => {
         const role = room.members[user.uid]
@@ -81,7 +88,6 @@ export function RoomList() {
               )}
             </div>
 
-            <BookingForm roomId={room.id} />
             <BookingList roomId={room.id} />
           </div>
         )

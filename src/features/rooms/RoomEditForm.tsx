@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { updateRoom, type Room } from './rooms.service'
+import { updateRoom } from './rooms.service'
+import type { Room } from './rooms.types'
 
 type Props = {
   room: Room

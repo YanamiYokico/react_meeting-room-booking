@@ -1,7 +1,6 @@
 import { useAuthStore } from '../features/auth/auth.store'
 import { LoginForm } from '../features/auth/LoginForm'
 import { RegisterForm } from '../features/auth/RegisterForm'
-import { RoomForm } from '../features/rooms/RoomForm'
 import { RoomList } from '../features/rooms/RoomList'
 
 export default function App() {
@@ -34,8 +33,6 @@ export default function App() {
           Logout
         </button>
       </div>
-
-      <RoomForm />
 
       <RoomList />
     </div>

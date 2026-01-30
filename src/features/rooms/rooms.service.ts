@@ -7,26 +7,20 @@ import {
   serverTimestamp,
   where,
   updateDoc,
-  deleteDoc,
+  writeBatch,
 } from 'firebase/firestore'
 import { db } from '../../firebase/firebase'
-
-export type Room = {
-  id: string
-  name: string
-  description: string
-  createdBy: string
-  members: Record<string, 'admin' | 'user'>
-}
+import type { Room } from './rooms.types'
 
 const roomsRef = collection(db, 'rooms')
+const bookingsRef = collection(db, 'bookings')
 
 export async function createRoom(
   userId: string,
   name: string,
   description: string
-) {
-  await addDoc(roomsRef, {
+): Promise<Room> {
+  const docRef = await addDoc(roomsRef, {
     name,
     description,
     createdBy: userId,
@@ -35,6 +29,16 @@ export async function createRoom(
     },
     createdAt: serverTimestamp(),
   })
+
+  return {
+    id: docRef.id,
+    name,
+    description,
+    createdBy: userId,
+    members: {
+      [userId]: 'admin',
+    },
+  }
 }
 
 export async function getUserRooms(userId: string): Promise<Room[]> {
@@ -42,24 +46,35 @@ export async function getUserRooms(userId: string): Promise<Room[]> {
     roomsRef,
     where(`members.${userId}`, 'in', ['admin', 'user'])
   )
+
   const snapshot = await getDocs(q)
 
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...(doc.data() as Omit<Room, 'id'>),
+  return snapshot.docs.map((docSnap) => ({
+    id: docSnap.id,
+    ...(docSnap.data() as Omit<Room, 'id'>),
   }))
 }
 
 export async function updateRoom(
-  roomId: string, data: {name: string, description: string}
+  roomId: string,
+  data: { name: string; description: string }
 ) {
-  const ref = doc(db, 'rooms', roomId);
-
-  await updateDoc(ref, data);
+  const ref = doc(db, 'rooms', roomId)
+  await updateDoc(ref, data)
 }
 
 export async function deleteRoom(roomId: string) {
-  const ref = doc(db, 'rooms', roomId)
+  const batch = writeBatch(db)
 
-  await deleteDoc(ref)
+  const q = query(bookingsRef, where('roomId', '==', roomId))
+  const bookingsSnap = await getDocs(q)
+
+  bookingsSnap.docs.forEach((docSnap) => {
+    batch.delete(docSnap.ref)
+  })
+
+  const roomRef = doc(db, 'rooms', roomId)
+  batch.delete(roomRef)
+
+  await batch.commit()
 }
