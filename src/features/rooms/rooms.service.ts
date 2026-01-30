@@ -78,3 +78,28 @@ export async function deleteRoom(roomId: string) {
 
   await batch.commit()
 }
+
+export async function addMemberToRoom(
+  roomId: string,
+  email: string,
+  role: 'admin' | 'user'
+) {
+  const q = query(
+    collection(db, 'users'),
+    where('email', '==', email)
+  )
+
+  const snap = await getDocs(q)
+
+  if (snap.empty) {
+    throw new Error('User with this email not found')
+  }
+
+  const user = snap.docs[0].data() as { uid: string }
+
+  const roomRef = doc(db, 'rooms', roomId)
+
+  await updateDoc(roomRef, {
+    [`members.${user.uid}`]: role,
+  })
+}

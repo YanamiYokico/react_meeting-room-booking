@@ -7,3 +7,9 @@ export type AuthState = {
   register: (name: string, email: string, password: string) => Promise<void>
   logout: () => Promise<void>
 }
+
+export type AppUser = {
+  uid: string
+  email: string
+  name?: string
+}

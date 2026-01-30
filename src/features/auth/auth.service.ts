@@ -4,7 +4,9 @@ import {
   signOut,
   updateProfile,
 } from 'firebase/auth'
+import { doc, setDoc } from 'firebase/firestore'
 import { auth } from '../../firebase/firebase'
+import { db } from '../../firebase/firebase'
 
 export async function registerUser(
   name: string,
@@ -13,9 +15,17 @@ export async function registerUser(
 ) {
   const cred = await createUserWithEmailAndPassword(auth, email, password)
 
-  if (auth.currentUser) {
-    await updateProfile(auth.currentUser, { displayName: name })
+  if (!cred.user) {
+    throw new Error('User not created')
   }
+
+  await updateProfile(cred.user, { displayName: name })
+
+  await setDoc(doc(db, 'users', cred.user.uid), {
+    uid: cred.user.uid,
+    email: cred.user.email,
+    name,
+  })
 
   return cred.user
 }

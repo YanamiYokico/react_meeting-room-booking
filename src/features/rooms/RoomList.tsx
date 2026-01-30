@@ -4,6 +4,7 @@ import { useAuthStore } from '../auth/auth.store'
 import { BookingList } from '../bookings/BookingList'
 import { RoomEditForm } from './RoomEditForm'
 import { RoomForm } from './RoomForm'
+import { AddRoomMemberForm } from './AddRoomMemberForm'
 import type { Room } from './rooms.types'
 
 export function RoomList() {
@@ -88,7 +89,14 @@ export function RoomList() {
               )}
             </div>
 
-            <BookingList roomId={room.id} />
+            {role === 'admin' && (
+              <AddRoomMemberForm roomId={room.id} />
+            )}
+
+            <BookingList
+              roomId={room.id}
+              roomRole={room.members[user.uid]}
+            />
           </div>
         )
       })}

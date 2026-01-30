@@ -7,9 +7,10 @@ import { useAuthStore } from '../auth/auth.store'
 
 type Props = {
   roomId: string
+  roomRole: 'admin' | 'user'
 }
 
-export function BookingList({ roomId }: Props) {
+export function BookingList({ roomId, roomRole }: Props) {
   const user = useAuthStore((s) => s.user)
   const [bookings, setBookings] = useState<Booking[]>([])
 
@@ -30,49 +31,72 @@ export function BookingList({ roomId }: Props) {
         <div className="text-sm text-gray-500">No bookings</div>
       )}
 
-      {bookings.map((booking) => (
-        <div key={booking.id} className="border p-3 rounded">
-          <div className="flex justify-between gap-4">
-            <div>
-              <div className="font-medium">{booking.description}</div>
-              <div className="text-xs text-gray-600">
-                {booking.startAt.toDate().toLocaleString()} —{' '}
-                {booking.endAt.toDate().toLocaleString()}
-              </div>
-            </div>
+      {bookings.map((booking) => {
+        const canManage =
+          user &&
+          (user.uid === booking.createdBy ||
+            roomRole === 'admin')
 
-            {user?.uid === booking.createdBy && (
-              <div className="flex gap-2 shrink-0">
-                <BookingEditForm
-                  booking={booking}
-                  onUpdated={(updated) => {
-                    setBookings((prev) =>
-                      prev.map((b) =>
-                        b.id === updated.id ? updated : b
+        return (
+          <div
+            key={booking.id}
+            className="border p-3 rounded"
+          >
+            <div className="flex justify-between gap-4">
+              <div>
+                <div className="font-medium">
+                  {booking.description}
+                </div>
+                <div className="text-xs text-gray-600">
+                  {booking.startAt
+                    .toDate()
+                    .toLocaleString()}{' '}
+                  —{' '}
+                  {booking.endAt
+                    .toDate()
+                    .toLocaleString()}
+                </div>
+              </div>
+
+              {canManage && (
+                <div className="flex gap-2 shrink-0">
+                  <BookingEditForm
+                    booking={booking}
+                    onUpdated={(updated) => {
+                      setBookings((prev) =>
+                        prev.map((b) =>
+                          b.id === updated.id
+                            ? updated
+                            : b
+                        )
                       )
-                    )
-                  }}
-                />
+                    }}
+                  />
 
-                <button
-                  className="text-xs text-red-600"
-                  onClick={async () => {
-                    const ok = confirm('Cancel this booking?')
-                    if (!ok) return
+                  <button
+                    className="text-xs text-red-600"
+                    onClick={async () => {
+                      const ok = confirm(
+                        'Cancel this booking?'
+                      )
+                      if (!ok) return
 
-                    await deleteBooking(booking.id)
-                    setBookings((prev) =>
-                      prev.filter((b) => b.id !== booking.id)
-                    )
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
+                      await deleteBooking(booking.id)
+                      setBookings((prev) =>
+                        prev.filter(
+                          (b) => b.id !== booking.id
+                        )
+                      )
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
