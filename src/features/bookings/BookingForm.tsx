@@ -1,7 +1,7 @@
-import { useState } from "react"
-import { createBooking } from "./bookings.service"
-import { useAuthStore } from "../auth/auth.store"
-import type { Booking } from "./booking.types"
+import { useState } from 'react'
+import { createBooking } from './bookings.service'
+import { useAuthStore } from '../auth/auth.store'
+import type { Booking } from './booking.types'
 
 type Props = {
   roomId: string
@@ -10,11 +10,12 @@ type Props = {
 
 export function BookingForm({ roomId, onCreated }: Props) {
   const user = useAuthStore((s) => s.user)
+
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
   const [description, setDescription] = useState('')
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
   if (!user) return null
 
@@ -67,9 +68,7 @@ export function BookingForm({ roomId, onCreated }: Props) {
             setEnd('')
             setDescription('')
           } catch (e) {
-            setError(
-              e instanceof Error ? e.message : String(e)
-            )
+            setError(e instanceof Error ? e.message : String(e))
           } finally {
             setLoading(false)
           }

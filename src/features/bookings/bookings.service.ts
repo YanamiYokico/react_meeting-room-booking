@@ -1,21 +1,25 @@
-import type { Booking } from './booking.types'
 import {
   addDoc,
   collection,
   getDocs,
   query,
-  serverTimestamp,
   where,
   Timestamp,
+  serverTimestamp,
+  updateDoc,
+  deleteDoc,
+  doc,
 } from 'firebase/firestore'
 import { db } from '../../firebase/firebase'
+import type { Booking } from './booking.types'
 
 const bookingsRef = collection(db, 'bookings')
 
 async function hasConflict(
   roomId: string,
   startAt: Timestamp,
-  endAt: Timestamp
+  endAt: Timestamp,
+  excludeId?: string
 ) {
   const q = query(
     bookingsRef,
@@ -25,32 +29,33 @@ async function hasConflict(
   )
 
   const snapshot = await getDocs(q)
-  return !snapshot.empty
+
+  return snapshot.docs.some((doc) => doc.id !== excludeId)
 }
 
 export async function createBooking(
   roomId: string,
-  startAt: Date,
-  endAt: Date,
+  start: Date,
+  end: Date,
   description: string,
   userId: string
-) {
-  const startTs = Timestamp.fromDate(startAt)
-  const endTs = Timestamp.fromDate(endAt)
+): Promise<Booking> {
+  const startAt = Timestamp.fromDate(start)
+  const endAt = Timestamp.fromDate(end)
 
-  if (endTs <= startTs) {
+  if (endAt <= startAt) {
     throw new Error('End time must be after start time')
   }
 
-  const conflict = await hasConflict(roomId, startTs, endTs)
+  const conflict = await hasConflict(roomId, startAt, endAt)
   if (conflict) {
     throw new Error('Time slot is already booked')
   }
 
   const docRef = await addDoc(bookingsRef, {
     roomId,
-    startAt: startTs,
-    endAt: endTs,
+    startAt,
+    endAt,
     description,
     createdBy: userId,
     createdAt: serverTimestamp(),
@@ -59,11 +64,47 @@ export async function createBooking(
   return {
     id: docRef.id,
     roomId,
-    startAt: startTs,
-    endAt: endTs,
+    startAt,
+    endAt,
     description,
     createdBy: userId,
   }
+}
+
+export async function updateBooking(
+  booking: Booking,
+  start: Date,
+  end: Date,
+  description: string
+) {
+  const startAt = Timestamp.fromDate(start)
+  const endAt = Timestamp.fromDate(end)
+
+  if (endAt <= startAt) {
+    throw new Error('End time must be after start time')
+  }
+
+  const conflict = await hasConflict(
+    booking.roomId,
+    startAt,
+    endAt,
+    booking.id
+  )
+
+  if (conflict) {
+    throw new Error('Time slot is already booked')
+  }
+
+  const ref = doc(db, 'bookings', booking.id)
+  await updateDoc(ref, {
+    startAt,
+    endAt,
+    description,
+  })
+}
+
+export async function deleteBooking(bookingId: string) {
+  await deleteDoc(doc(db, 'bookings', bookingId))
 }
 
 export async function getRoomBookings(roomId: string): Promise<Booking[]> {
